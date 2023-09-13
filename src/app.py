@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Character, Planet, Vehicle, FavoriteCharacter, FavoritePlanet
+from models import db, Users, Characters, Planets, Vehicles, Favorites
 #from models import Person
 
 app = Flask(__name__)
@@ -43,8 +43,9 @@ def sitemap():
 
 @app.route('/users', methods=['GET'])
 def get_all_users():
-    users = User.query.all()
-    serialize_users = [user.serialize() for user in users]
+    
+    all_users = Users.query.all()
+    serialize_users = [user.serialize() for user in all_users]
 
     response_body = {
         "msg": "This is the list of users",
@@ -57,9 +58,10 @@ def get_all_users():
 #------------------------------------------------------------
 #------------------------------------------------------------
 @app.route('/characters', methods=['GET'])
-def get_characters(): 
-    characters = Character.query.all()
-    serialize_characters = [character.serialize() for character in characters]
+def get_all_characters(): 
+    
+    all_characters = Characters.query.all()
+    serialize_characters = [character.serialize() for character in all_characters]
 
     response_body = {
         "msg": "This is the list of characters",
@@ -70,9 +72,10 @@ def get_characters():
 
 # GET A PARTICULAR CHARACTER
 #------------------------------------------------------------
-@app.route('/characters/<int:id>', methods=['GET'])
+@app.route('/characters/<int:character_id>', methods=['GET'])
 def get_one_character(character_id):
-    characters = Character.query.get(character_id)
+    
+    characters = Characters.query.get(character_id)
 
     if characters is None:
         return jsonify({"msg": "Character doesnt exist"}), 404
@@ -84,43 +87,14 @@ def get_one_character(character_id):
 
     return jsonify(response_body), 200
 
-# ADD A FAVORITE CHARACTER
-#------------------------------------------------------------
-@app.route('favorite/characters/<int:character_id>', methods=['POST'])
-def create_favorite_character(character_id):
-    new_favorite_character = FavoriteCharacter(user_id=1, character_id=character_id)
-    db.session.add(new_favorite_character)
-    db.session.commit()
-
-    response_body = {
-            "msg": "This is your post /favorite/characters/<int:character_id> response",
-            "result": new_favorite_character.serialize()
-        }
-    return jsonify(response_body), 200
-
-#DELETE A FAVORITE CHARACTER
-#--------------------------------------------------------------
-@app.route('favorite/characters/<int: id>', methods=['DELETE'])
-def delete_favorite_character(character_id):
-    favorite_character = FavoriteCharacter.query.get(character_id)
-    db.session.delete(favorite_character)
-    db.session.commit()
-
-    response_body = {
-        "msg": "This is your delete /favorite/characters/<int:id> response",
-        "result": "Character Deleted"
-    }
-    return jsonify(response_body), 200
-
-
-
 # GET ALL PLANETS
 #------------------------------------------------------------
 #------------------------------------------------------------
 @app.route('/planets', methods=['GET'])
-def get_planets():
-    planets = Planet.query.all()
-    serialize_planets = [planet.serialize() for planet in planets]
+def get_all_planets():
+    
+    all_planets = Planets.query.all()
+    serialize_planets = [planet.serialize() for planet in all_planets]
 
     response_body = {
         "msg": "This is the list of planets",
@@ -131,9 +105,10 @@ def get_planets():
 
 # GET A PARTICULAR PLANET
 #------------------------------------------------------------
-@app.route('planets/<int:id>', methods=['GET'])
+@app.route('planets/<int:planet_id>', methods=['GET'])
 def get_one_planet(planet_id):
-    planets = Planet.query.get(planet_id)
+    
+    planets = Planets.query.get(planet_id)
 
     if planets is None:
         return jsonify({"msg": "Planet doesnt exist"}), 404
@@ -145,43 +120,14 @@ def get_one_planet(planet_id):
 
     return jsonify(response_body), 200
 
-# ADD A FAVORITE PLANET
-#------------------------------------------------------------
-@app.route('favorite/planets/<int:planet_id>', methods=['POST'])
-def create_favorite_planet(planet_id):
-    new_favorite_planet = FavoritePlanet(user_id=1, planet_id=planet_id)
-    db.session.add(new_favorite_planet)
-    db.session.commit()
-
-    response_body = {
-            "msg": "This is your post /favorite/planets/<int:planet_id> response",
-            "result": new_favorite_planet.serialize()
-        }
-    return jsonify(response_body), 200
-
-#DELETE A FAVORITE PLANET
-#--------------------------------------------------------------
-@app.route('favorite/planets/<int: id>', methods=['DELETE'])
-def delete_favorite_planet(planet_id):
-    favorite_planet = FavoritePlanet.query.get(planet_id)
-    db.session.delete(favorite_planet)
-    db.session.commit()
-
-    response_body = {
-        "msg": "This is your delete /favorite/planets/<int:id> response",
-        "result": "Planet Deleted"
-    }
-    return jsonify(response_body), 200
-
-
-
 # GET ALL VEHICLES
 #------------------------------------------------------------
 #------------------------------------------------------------
 @app.route('/vehicles', methods=['GET'])
 def get_vehicles():
-    vehicles = Vehicle.query.all()
-    serialize_vehicles = [vehicle.serialize() for vehicle in vehicles]
+    
+    all_vehicles = Vehicles.query.all()
+    serialize_vehicles = [vehicle.serialize() for vehicle in all_vehicles]
 
     response_body = {
         "msg": "This is the list of vehicles",
@@ -192,9 +138,10 @@ def get_vehicles():
 
 # GET A PARTICULAR VEHICLE
 #------------------------------------------------------------
-@app.route('vehicles/<int:id>', methods=['GET'])
+@app.route('vehicles/<int:vehicle_id>', methods=['GET'])
 def get_one_vehicle(vehicle_id):
-    vehicles = Vehicle.query.get(vehicle_id)
+    
+    vehicles = Vehicles.query.get(vehicle_id)
 
     if vehicles is None:
         return jsonify({"msg": "Vehicle doesnt exist"}), 404
@@ -210,19 +157,87 @@ def get_one_vehicle(vehicle_id):
 #------------------------------------------------------------
 @app.route('/users/favorites', methods=['GET'])
 def get_user_favorites():
-    user_id = 1  
-    fav_characters = db.session.query(Character).join(FavoriteCharacter).filter(FavoriteCharacter.user_id == user_id).all()
-    fav_characters = [character.serialize() for character in fav_characters]
-    fav_planets = []
-    favorites = fav_characters + fav_planets
+    
+    all_favorites = Favorites.query.all()
+    serialize_favorites = [favorite.serialize() for favorite in all_favorites]
 
     response_body = {
         "msg": "This is the list of favorites for the user",
-        "results": favorites
+        "results": serialize_favorites
     }
 
     return jsonify(response_body), 200
 
+# ADD A FAVORITE
+#------------------------------------------------------------
+@app.route('/users/favorites', methods=['POST'])
+def add_favorite_character():
+    
+    data = request.get_json()
+
+    add_favorite = Favorites(
+        character_id = data.get("character_id"),
+        planet_id = data.get("planet_id"),
+        vehicle_id = data.get("vehicle_id"),
+        users_id = data.get("users_id")
+    )
+
+    db.session.add(add_favorite)
+    db.session.commit()
+
+    response_body = {
+            "msg": "This is your post of favorites",
+            "result": add_favorite.serialize()
+    }
+
+    return jsonify(response_body), 200
+
+# UPDATE A FAVORITE
+#------------------------------------------------------------
+@app.route('/users/favorites/<int:id>', methods=['PUT'])
+def update_favorite(id):
+
+    favorite = Favorites.query.get(id)
+
+    if not favorite:
+        return jsonify({"message": "favorite not found"}), 404
+    
+    data = request.get_json()
+
+    if "character_id" in data:
+        favorite.character_id = data.get("character_id")
+
+    if "planet_id" in data:
+        favorite.planet_id = data.get("planet_id")
+
+    if "vehicle_id" in data:
+        favorite.vehicle_id = data.get("vehicle_id")
+
+    if "users_id" in data:
+        favorite.users_id = data.get("users_id")
+ 
+    db.session.commit()
+    
+    return jsonify(favorite.serialize()), 200
+
+#DELETE A FAVORITE PLANET
+#--------------------------------------------------------------
+@app.route('/users/favorites/<int:id>', methods=['DELETE'])
+def delete_favorite(id):
+    
+    favorite = Favorites.query.get(id)
+
+    if not favorite:
+        return jsonify({"message": "favorite not found"}), 404
+    
+    db.session.delete(favorite)
+    db.session.commit()
+   
+    response_body = {
+            "msg": "Favorite Deleted",
+    }
+
+    return jsonify(response_body), 200
 
 
 # this only runs if `$ python src/app.py` is executed
